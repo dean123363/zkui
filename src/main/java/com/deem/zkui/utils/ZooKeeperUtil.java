@@ -55,7 +55,7 @@ public enum ZooKeeperUtil {
 
     private final static org.slf4j.Logger logger = LoggerFactory.getLogger(ZooKeeperUtil.class);
 
-    public ZooKeeper createZKConnection(String url, Integer zkSessionTimeout) throws IOException, InterruptedException {
+    public ZooKeeper createZKConnection(String url, Integer zkSessionTimeout, String jsonAuthInfo) throws IOException, InterruptedException {
         Integer connectAttempt = 0;
         ZooKeeper zk = new ZooKeeper(url, zkSessionTimeout, new Watcher() {
             @Override
@@ -70,6 +70,14 @@ public enum ZooKeeperUtil {
             if (connectAttempt == MAX_CONNECT_ATTEMPT) {
                 break;
             }
+        }
+        if (jsonAuthInfo != null && !jsonAuthInfo.equals("")) {
+        	try {
+				JSONObject authInfo = (JSONObject) new JSONParser().parse(jsonAuthInfo);
+				zk.addAuthInfo((String) authInfo.get("scheme"), ((String) authInfo.get("auth")).getBytes());
+			} catch (ParseException e) {
+				throw new RuntimeException("Unable to parse authInfo " + jsonAuthInfo, e);
+			}
         }
         return zk;
 
